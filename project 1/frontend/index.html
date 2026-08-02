@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindSense AI — Mental Stress Prediction</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e14;
+    --bg-elevated:#0f1520;
+    --bg-elevated-2:#141b28;
+    --surface:rgba(255,255,255,0.045);
+    --surface-hover:rgba(255,255,255,0.075);
+    --border:rgba(255,255,255,0.09);
+    --border-strong:rgba(255,255,255,0.16);
+    --text:#e8eef4;
+    --text-muted:#8695a7;
+    --text-dim:#586576;
+    --primary:#5eead4;
+    --primary-2:#818cf8;
+    --primary-soft:rgba(94,234,212,0.12);
+    --grad:linear-gradient(135deg,#5eead4 0%,#818cf8 100%);
+    --grad-soft:linear-gradient(135deg,rgba(94,234,212,0.16),rgba(129,140,248,0.16));
+    --low:#5eead4;
+    --medium:#fbbf24;
+    --high:#fb923c;
+    --veryhigh:#fb7185;
+    --radius-sm:10px;
+    --radius-md:16px;
+    --radius-lg:24px;
+    --shadow-glow:0 0 60px rgba(94,234,212,0.08);
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+  }
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:
+      radial-gradient(ellipse 800px 500px at 15% -5%, rgba(129,140,248,0.10), transparent),
+      radial-gradient(ellipse 700px 500px at 90% 10%, rgba(94,234,212,0.08), transparent),
+      var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; scroll-behavior:auto !important;}
+  }
+  a{color:inherit;}
+  button{font-family:inherit;cursor:pointer;}
+  :focus-visible{outline:2px solid var(--primary); outline-offset:2px; border-radius:4px;}
+
+  /* ---------- layout helpers ---------- */
+  .wrap{max-width:1100px; margin:0 auto; padding:0 24px;}
+  .hidden{display:none !important;}
+
+  /* ---------- topbar ---------- */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    backdrop-filter:blur(14px);
+    background:rgba(10,14,20,0.7);
+    border-bottom:1px solid var(--border);
+  }
+  .topbar .wrap{display:flex; align-items:center; justify-content:space-between; height:68px;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--font-display); font-weight:600; font-size:19px; letter-spacing:-0.01em;}
+  .brand-mark{
+    width:32px; height:32px; border-radius:9px;
+    background:var(--grad);
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 16px rgba(94,234,212,0.25);
+  }
+  .brand-mark svg{width:18px; height:18px;}
+  .topbar-cta{
+    font-size:13.5px; font-weight:600; color:var(--text);
+    padding:9px 18px; border-radius:100px;
+    border:1px solid var(--border-strong);
+    background:var(--surface);
+    transition:all .2s ease;
+  }
+  .topbar-cta:hover{background:var(--surface-hover); border-color:var(--primary);}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative; padding:88px 0 64px; overflow:hidden;}
+  .hero-grid{display:grid; grid-template-columns:1.1fr 0.9fr; gap:48px; align-items:center;}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:var(--font-mono); font-size:12px; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--primary); background:var(--primary-soft);
+    padding:6px 14px; border-radius:100px; border:1px solid rgba(94,234,212,0.25);
+    margin-bottom:22px;
+  }
+  .eyebrow .dot{width:6px; height:6px; border-radius:50%; background:var(--primary); box-shadow:0 0 8px var(--primary); animation:pulse-dot 2s ease-in-out infinite;}
+  @keyframes pulse-dot{0%,100%{opacity:1;} 50%{opacity:0.35;}}
+
+  .hero h1{
+    font-family:var(--font-display); font-weight:700;
+    font-size:clamp(34px, 5vw, 54px); line-height:1.06; letter-spacing:-0.02em;
+    margin-bottom:20px;
+  }
+  .hero h1 span{
+    background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .hero p.lead{
+    font-size:17px; color:var(--text-muted); max-width:480px; margin-bottom:34px;
+  }
+  .hero-actions{display:flex; gap:14px; flex-wrap:wrap; align-items:center;}
+
+  .btn-primary{
+    position:relative; overflow:hidden;
+    display:inline-flex; align-items:center; gap:10px;
+    background:var(--grad); color:#06131a;
+    font-weight:700; font-size:15px;
+    padding:15px 28px; border:none; border-radius:100px;
+    box-shadow:0 8px 30px rgba(94,234,212,0.22);
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 12px 36px rgba(94,234,212,0.32);}
+  .btn-primary:active{transform:translateY(0);}
+  .btn-primary svg{width:16px; height:16px; transition:transform .25s ease;}
+  .btn-primary:hover svg{transform:translateX(3px);}
+
+  .btn-ghost{
+    display:inline-flex; align-items:center; gap:8px;
+    font-weight:600; font-size:14.5px; color:var(--text-muted);
+    padding:14px 8px; border:none; background:none;
+    transition:color .2s ease;
+  }
+  .btn-ghost:hover{color:var(--text);}
+
+  .hero-stats{display:flex; gap:28px; margin-top:44px;}
+  .hero-stat b{font-family:var(--font-display); font-size:24px; display:block;}
+  .hero-stat span{font-size:12.5px; color:var(--text-dim);}
+
+  /* signature waveform visual */
+  .pulse-panel{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius-lg);
+    padding:28px;
+    backdrop-filter:blur(20px);
+    box-shadow:var(--shadow-glow);
+  }
+  .pulse-panel-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;}
+  .pulse-panel-head .label{font-family:var(--font-mono); font-size:11.5px; color:var(--text-dim); letter-spacing:0.05em; text-transform:uppercase;}
+  .pulse-panel-head .live{display:flex; align-items:center; gap:6px; font-family:var(--font-mono); font-size:11px; color:var(--primary);}
+  .live .dot{width:5px; height:5px; border-radius:50%; background:var(--primary); animation:pulse-dot 2s ease-in-out infinite;}
+
+  .waveform-svg{width:100%; height:140px; display:block;}
+  .waveform-path{
+    fill:none; stroke:url(#waveGrad); stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round;
+    stroke-dasharray:1400; stroke-dashoffset:1400;
+    animation:draw 3.2s ease-out forwards, glide 6s linear infinite 3.2s;
+  }
+  @keyframes draw{to{stroke-dashoffset:0;}}
+  @keyframes glide{
+    0%{transform:translateX(0);} 100%{transform:translateX(-50%);}
+  }
+  .float-cards{display:flex; flex-direction:column; gap:10px; margin-top:20px;}
+  .float-card{
+    display:flex; align-items:center; gap:12px;
+    background:var(--bg-elevated); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:12px 14px;
+    animation:float 5s ease-in-out infinite;
+  }
+  .float-card:nth-child(2){animation-delay:.6s;}
+  .float-card:nth-child(3){animation-delay:1.2s;}
+  @keyframes float{0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);}}
+  .float-card .icn{width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .float-card .icn svg{width:17px; height:17px;}
+  .float-card .fc-text b{display:block; font-size:13.5px; font-weight:600;}
+  .float-card .fc-text span{font-size:11.5px; color:var(--text-dim);}
+
+  /* ---------- section shell ---------- */
+  .section-label{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--text-dim); margin-bottom:10px;
+  }
+  .section-title{font-family:var(--font-display); font-weight:600; font-size:clamp(24px,3.4vw,32px); letter-spacing:-0.01em; margin-bottom:8px;}
+  .section-sub{color:var(--text-muted); font-size:15px; max-width:520px; margin-bottom:40px;}
+
+  /* ---------- form / wizard ---------- */
+  .form-section{padding:70px 0 90px; border-top:1px solid var(--border);}
+  .wizard{
+    background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--radius-lg);
+    padding:8px; box-shadow:0 24px 60px rgba(0,0,0,0.35);
+  }
+  .wizard-inner{
+    background:var(--bg-elevated-2); border-radius:calc(var(--radius-lg) - 8px);
+    padding:40px;
+  }
+  @media (max-width:640px){.wizard-inner{padding:24px 18px;}}
+
+  .progress-track{display:flex; align-items:center; margin-bottom:38px;}
+  .prog-step{flex:1; display:flex; flex-direction:column; align-items:center; position:relative;}
+  .prog-step .num{
+    width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:12.5px; font-weight:500;
+    border:1.5px solid var(--border-strong); color:var(--text-dim); background:var(--bg-elevated);
+    transition:all .3s ease; z-index:2;
+  }
+  .prog-step .lbl{font-size:11px; color:var(--text-dim); margin-top:8px; text-align:center; font-weight:500;}
+  .prog-step:not(:last-child)::after{
+    content:''; position:absolute; top:16px; left:calc(50% + 20px); width:calc(100% - 40px);
+    height:1.5px; background:var(--border-strong); z-index:1; transition:background .4s ease;
+  }
+  .prog-step.done .num{background:var(--grad); border-color:transparent; color:#06131a;}
+  .prog-step.done:not(:last-child)::after{background:var(--primary);}
+  .prog-step.active .num{border-color:var(--primary); color:var(--primary); box-shadow:0 0 0 4px var(--primary-soft);}
+  .prog-step.active .lbl{color:var(--text);}
+
+  .step{display:none; animation:stepIn .4s ease;}
+  .step.active{display:block;}
+  @keyframes stepIn{from{opacity:0; transform:translateX(8px);} to{opacity:1; transform:translateX(0);}}
+
+  .step-head{display:flex; align-items:center; gap:12px; margin-bottom:26px;}
+  .step-head .icn{
+    width:40px; height:40px; border-radius:11px; background:var(--grad-soft); border:1px solid rgba(94,234,212,0.2);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .step-head .icn svg{width:19px; height:19px; color:var(--primary);}
+  .step-head h3{font-family:var(--font-display); font-size:19px; font-weight:600;}
+  .step-head p{font-size:13px; color:var(--text-dim); margin-top:2px;}
+
+  .field-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  @media (max-width:640px){.field-grid{grid-template-columns:1fr;}}
+  .field{display:flex; flex-direction:column; gap:8px;}
+  .field label{font-size:13px; font-weight:600; color:var(--text-muted);}
+  .field input[type="number"], .field input[type="text"], .field select{
+    background:var(--bg-elevated); border:1.5px solid var(--border); color:var(--text);
+    border-radius:var(--radius-sm); padding:12px 14px; font-size:14.5px; font-family:var(--font-body);
+    transition:border-color .2s ease, box-shadow .2s ease; width:100%;
+    appearance:none;
+  }
+  .field select{
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' stroke='%238695a7' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat; background-position:right 14px center; padding-right:36px;
+  }
+  .field input:focus, .field select:focus{border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft); outline:none;}
+  .hint{font-size:11.5px; color:var(--text-dim);}
+
+  /* searchable country select */
+  .combo{position:relative;}
+  .combo-list{
+    position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:20;
+    background:var(--bg-elevated-2); border:1px solid var(--border-strong); border-radius:var(--radius-sm);
+    max-height:220px; overflow-y:auto; box-shadow:0 16px 40px rgba(0,0,0,0.5);
+    display:none;
+  }
+  .combo-list.open{display:block;}
+  .combo-list div{padding:10px 14px; font-size:14px; cursor:pointer; transition:background .15s ease;}
+  .combo-list div:hover, .combo-list div.hl{background:var(--surface-hover); color:var(--primary);}
+  .combo-list .empty{color:var(--text-dim); cursor:default;}
+  .combo-list .empty:hover{background:none; color:var(--text-dim);}
+
+  /* sliders */
+  .slider-field{margin-bottom:26px;}
+  .slider-field:last-child{margin-bottom:0;}
+  .slider-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+  .slider-top .sl-label{display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600;}
+  .slider-top .sl-label .icn{width:28px; height:28px; border-radius:8px; background:var(--surface); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .slider-top .sl-label .icn svg{width:14px; height:14px; color:var(--primary);}
+  .sl-value{font-family:var(--font-mono); font-size:13.5px; font-weight:500; color:var(--primary); background:var(--primary-soft); padding:3px 10px; border-radius:100px;}
+  input[type="range"]{
+    -webkit-appearance :none; width:100%; height:5px; border-radius:100px;
+    background:linear-gradient(90deg, var(--primary) 0%, var(--primary) var(--fill,50%), var(--border) var(--fill,50%), var(--border) 100%);
+    outline:none;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+    background:#fff; border:3px solid var(--primary-2); cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,0.4); transition:transform .15s ease;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.15);}
+  input[type="range"]::-moz-range-thumb{
+    width:18px; height:18px; border-radius:50%; background:#fff; border:3px solid var(--primary-2); cursor:pointer;
+  }
+
+  .review-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px 24px;}
+  @media (max-width:640px){.review-grid{grid-template-columns:1fr;}}
+  .review-item{display:flex; justify-content:space-between; padding:12px 0; border-bottom:1px solid var(--border); font-size:13.5px;}
+  .review-item span:first-child{color:var(--text-dim);}
+  .review-item span:last-child{font-weight:600; text-align:right;}
+
+  .wizard-nav{display:flex; justify-content:space-between; align-items:center; margin-top:36px; padding-top:28px; border-top:1px solid var(--border);}
+  .btn-nav{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:12px 22px; border-radius:100px; font-size:14px; font-weight:600;
+    border:1.5px solid var(--border-strong); background:transparent; color:var(--text);
+    transition:all .2s ease;
+  }
+  .btn-nav:hover{background:var(--surface-hover);}
+  .btn-nav:disabled{opacity:0.35; cursor:not-allowed;}
+  .btn-nav svg{width:14px; height:14px;}
+  .btn-submit{
+    background:var(--grad); color:#06131a; border:none; font-weight:700;
+    padding:13px 26px; border-radius:100px; font-size:14.5px;
+    display:inline-flex; align-items:center; gap:10px;
+    box-shadow:0 8px 26px rgba(94,234,212,0.22); transition:transform .2s ease;
+  }
+  .btn-submit:hover{transform:translateY(-2px);}
+  .btn-submit:disabled{opacity:0.6; cursor:not-allowed; transform:none;}
+
+  .err-msg{color:var(--veryhigh); font-size:12px; margin-top:6px; display:none;}
+  .field.invalid input, .field.invalid select{border-color:var(--veryhigh);}
+  .field.invalid .err-msg{display:block;}
+
+  /* ---------- loading overlay ---------- */
+  .loading-overlay{
+    position:fixed; inset:0; background:rgba(6,9,14,0.82); backdrop-filter:blur(6px);
+    z-index:100; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:22px;
+  }
+  .loading-ring{position:relative; width:64px; height:64px;}
+  .loading-ring svg{width:100%; height:100%; animation:spin 1.4s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .loading-overlay p{font-family:var(--font-mono); font-size:13px; color:var(--text-muted); letter-spacing:0.02em;}
+
+  /* ---------- result ---------- */
+  .result-section{padding:0 0 100px;}
+  .result-card{
+    max-width:640px; margin:0 auto; background:var(--bg-elevated); border:1px solid var(--border-strong);
+    border-radius:var(--radius-lg); padding:44px; text-align:center; box-shadow:0 30px 70px rgba(0,0,0,0.4);
+    animation:resultIn .5s cubic-bezier(.2,.8,.3,1);
+  }
+  @keyframes resultIn{from{opacity:0; transform:translateY(16px) scale(0.98);} to{opacity:1; transform:translateY(0) scale(1);}}
+  @media (max-width:640px){.result-card{padding:30px 22px;}}
+
+  .score-wrap{
+    width:180px; height:180px; margin:0 auto 8px;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center; flex-direction:column;
+    background:var(--grad-soft);
+    border:1px solid rgba(94,234,212,0.25);
+    box-shadow:0 0 50px rgba(94,234,212,0.10);
+  }
+  .score-wrap .score-num{
+    font-family:var(--font-display); font-weight:700; font-size:52px; letter-spacing:-0.02em;
+    background:var(--grad); -webkit-background-clip:text; background-clip:text; color:transparent;
+    line-height:1;
+  }
+  .score-wrap .score-caption{
+    font-family:var(--font-mono); font-size:11px; color:var(--text-dim);
+    letter-spacing:0.05em; text-transform:uppercase; margin-top:8px;
+  }
+
+  .result-title{font-family:var(--font-display); font-size:24px; font-weight:700; margin:22px 0 14px;}
+  .result-explain{color:var(--text-muted); font-size:15px; max-width:440px; margin:0 auto 32px; line-height:1.6;}
+
+  .result-metrics{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:32px;}
+  .metric-chip{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px 8px;}
+  .metric-chip .icn{width:26px; height:26px; margin:0 auto 8px; display:flex; align-items:center; justify-content:center;}
+  .metric-chip .icn svg{width:14px; height:14px; color:var(--primary);}
+  .metric-chip b{display:block; font-family:var(--font-mono); font-size:15px;}
+  .metric-chip span{font-size:10.5px; color:var(--text-dim);}
+
+  .result-actions{display:flex; gap:12px; justify-content:center; flex-wrap:wrap;}
+
+  .disclaimer{
+    max-width:640px; margin:22px auto 0; text-align:center; font-size:11.5px; color:var(--text-dim); line-height:1.6;
+  }
+
+  footer{border-top:1px solid var(--border); padding:32px 0; text-align:center; color:var(--text-dim); font-size:12.5px;}
+
+  /* icon color variants for float cards */
+  .ic-sleep{background:rgba(129,140,248,0.15); color:#818cf8;}
+  .ic-exercise{background:rgba(94,234,212,0.15); color:#5eead4;}
+  .ic-social{background:rgba(251,191,36,0.15); color:#fbbf24;}
+</style>
+</head>
+<body>
+
+<!-- ============ TOPBAR ============ -->
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M3 12h4l2-7 4 14 2-7h6" stroke="#06131a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      MindSense AI
+    </div>
+    <a href="#predict" class="topbar-cta">Start assessment</a>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow"><span class="dot"></span> AI-Powered Wellbeing Signal</div>
+      <h1>Understand your <span>mental stress</span> before it understands you.</h1>
+      <p class="lead">MindSense AI reads the quiet signals in your daily routine — sleep, screen time, study load, movement — and turns them into a clear stress reading, in under a minute.</p>
+      <div class="hero-actions">
+        <a href="#predict" class="btn-primary">
+          Analyze Stress Level
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <button class="btn-ghost" type="button" onclick="document.getElementById('howItWorks').scrollIntoView({behavior:'smooth'})">
+          How it works
+        </button>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><b>12</b><span>lifestyle signals</span></div>
+        <div class="hero-stat"><b>&lt;60s</b><span>to a result</span></div>
+        <div class="hero-stat"><b>4</b><span>risk tiers</span></div>
+      </div>
+    </div>
+
+    <div class="pulse-panel">
+      <div class="pulse-panel-head">
+        <span class="label">Signal preview</span>
+        <span class="live"><span class="dot"></span>live model</span>
+      </div>
+      <svg class="waveform-svg" viewBox="0 0 500 140" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="waveGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#5eead4"/>
+            <stop offset="100%" stop-color="#818cf8"/>
+          </linearGradient>
+        </defs>
+        <path class="waveform-path" d="M0,70 L40,70 L55,30 L70,110 L85,20 L100,70 L150,70 L165,55 L180,85 L195,70 L260,70 L275,40 L290,100 L305,15 L320,70 L380,70 L395,58 L410,82 L425,70 L500,70"/>
+      </svg>
+      <div class="float-cards">
+        <div class="float-card">
+          <div class="icn ic-sleep">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="fc-text"><b>Sleep pattern</b><span>Tracked nightly</span></div>
+        </div>
+        <div class="float-card">
+          <div class="icn ic-exercise">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M6.5 6.5 17.5 17.5M4 9l3-3M20 15l-3 3M2 21l4-4M20 3l-4 4M15 3l2 2-2.5 2.5-2-2ZM7 17l2 2-2.5 2.5-2-2Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="fc-text"><b>Physical activity</b><span>Daily movement</span></div>
+        </div>
+        <div class="float-card">
+          <div class="icn ic-social">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 8h18" stroke="currentColor" stroke-width="1.6"/></svg>
+          </div>
+          <div class="fc-text"><b>Screen behavior</b><span>Usage &amp; unlocks</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FORM ============ -->
+<section class="form-section" id="predict">
+  <div class="wrap">
+    <div id="howItWorks" class="section-label">Assessment</div>
+    <h2 class="section-title">A few things about your day</h2>
+    <p class="section-sub">Five short steps. Nothing is stored — your answers are sent directly to the prediction model and discarded after your result.</p>
+
+    <div class="wizard">
+      <div class="wizard-inner">
+
+        <div class="progress-track" id="progressTrack"></div>
+
+        <form id="stressForm" novalidate>
+
+          <!-- STEP 1 — Personal -->
+          <div class="step active" data-step="1">
+            <div class="step-head">
+              <div class="icn"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.5" stroke="currentColor" stroke-width="1.8"/><path d="M4.5 20c1.5-4 4.2-6 7.5-6s6 2 7.5 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+              <div><h3>Personal information</h3><p>The basics, to calibrate your baseline.</p></div>
+            </div>
+            <div class="field-grid">
+              <div class="field" id="f-age">
+                <label for="age">Age</label>
+                <input type="number" id="age" min="10" max="100" placeholder="e.g. 21" required>
+                <span class="err-msg">Enter an age between 10 and 100.</span>
+              </div>
+              <div class="field" id="f-gender">
+                <label for="gender">Gender</label>
+                <select id="gender" required>
+                  <option value="" disabled selected>Select gender</option>
+                  <option>Male</option>
+                  <option>Female</option>
+                </select>
+              </div>
+              <div class="field combo" id="f-country" style="grid-column:1 / -1;">
+                <label for="country">Country</label>
+                <input type="text" id="country" placeholder="Start typing your country…" autocomplete="off" required>
+                <div class="combo-list" id="countryList"></div>
+                <span class="hint">Not on the list? We'll group it under "Other".</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2 — Academic -->
+          <div class="step" data-step="2">
+            <div class="step-head">
+              <div class="icn"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3 2 8l10 5 10-5-10-5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M6 10.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-5.5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></div>
+              <div><h3>Academic information</h3><p>Study stage often shapes daily pressure.</p></div>
+            </div>
+            <div class="field-grid">
+              <div class="field" id="f-academic" style="grid-column:1 / -1;">
+                <label for="academic">Academic level</label>
+                <select id="academic" required>
+                  <option value="" disabled selected>Select academic level</option>
+                  <option>High School</option>
+                  <option>Undergraduate</option>
+                  <option>Graduate</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 3 — Social media -->
+          <div class="step" data-step="3">
+            <div class="step-head">
+              <div class="icn"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/><path d="M8 10h.01M16 10h.01M8.5 15c1 1 5 1 7 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></div>
+              <div><h3>Social media usage</h3><p>Platform and purpose both matter.</p></div>
+            </div>
+            <div class="field-grid">
+              <div class="field" id="f-platform">
+                <label for="platform">Most used platform</label>
+                <select id="platform" required>
+                  <option value="" disabled selected>Select platform</option>
+                  <option>Facebook</option><option>LinkedIn</option><option>Instagram</option>
+                  <option>Snapchat</option><option>Twitter</option><option>YouTube</option>
+                  <option>TikTok</option><option>LINE</option><option>KakaoTalk</option>
+                  <option>VKontakte</option><option>WhatsApp</option><option>WeChat</option>
+                </select>
+              </div>
+              <div class="field" id="f-purpose">
+                <label for="purpose">Primary purpose of use</label>
+                <select id="purpose" required>
+                  <option value="" disabled selected>Select purpose</option>
+                  <option>Networking</option><option>Education</option>
+                  <option>Entertainment</option><option>News</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 4 — Lifestyle -->
+          <div class="step" data-step="4">
+            <div class="step-head">
+              <div class="icn"><svg viewBox="0 0 24 24" fill="none"><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/></svg></div>
+              <div><h3>Daily lifestyle habits</h3><p>Drag each slider to match a typical day.</p></div>
+            </div>
+
+            <div class="slider-field">
+              <div class="slider-top">
+                <span class="sl-label"><span class="icn"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M3 8h18" stroke="currentColor" stroke-width="1.6"/></svg></span>Avg. daily screen usage</span>
+                <span class="sl-value"><span id="val-usage">6</span> hrs</span>
+              </div>
+              <input type="range" id="usage" min="0" max="24" value="6">
+            </div>
+
+            <div class="slider-field">
+              <div class="slider-top">
+                <span class="sl-label"><span class="icn"><svg viewBox="0 0 24 24" fill="none"><rect x="6" y="2" width="12" height="20" rx="2.5" stroke="currentColor" stroke-width="1.6"/><path d="M10 19h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>Daily phone unlocks</span>
+                <span class="sl-value"><span id="val-unlocks">10</span></span>
+              </div>
+              <input type="range" id="unlocks" min="0" max="24" value="10">
+            </div>
+
+            <div class="slider-field">
+              <div class="slider-top">
+                <span class="sl-label"><span class="icn"><svg viewBox="0 0 24 24" fill="none"><path d="M4 19V6a2 2 0 0 1 2-2h11l3 3v12" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M8 8h7M8 12h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></span>Study hours</span>
+                <span class="sl-value"><span id="val-study">3</span> hrs</span>
+              </div>
+              <input type="range" id="study" min="0" max="24" value="3">
+            </div>
+
+            <div class="slider-field">
+              <div class="slider-top">
+                <span class="sl-label"><span class="icn"><svg viewBox="0 0 24 24" fill="none"><path d="M6.5 6.5 17.5 17.5M4 9l3-3M20 15l-3 3M2 21l4-4M20 3l-4 4M15 3l2 2-2.5 2.5-2-2ZM7 17l2 2-2.5 2.5-2-2Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Physical activity</span>
+                <span class="sl-value"><span id="val-activity">1</span> hrs</span>
+              </div>
+              <input type="range" id="activity" min="0" max="24" value="1">
+            </div>
+
+            <div class="slider-field">
+              <div class="slider-top">
+                <span class="sl-label"><span class="icn"><svg viewBox="0 0 24 24" fill="none"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Sleep per night</span>
+                <span class="sl-value"><span id="val-sleep">7</span> hrs</span>
+              </div>
+              <input type="range" id="sleep" min="0" max="24" value="7">
+            </div>
+
+            <div class="field-grid" style="margin-top:26px;">
+              <div class="field" id="f-stress" style="grid-column:1 / -1;">
+                <label for="stresslevel">How would you rate your current stress, honestly?</label>
+                <select id="stresslevel" required>
+                  <option value="" disabled selected>Select current stress level</option>
+                  <option>Low</option><option>Medium</option><option>High</option><option>Very High</option>
+                </select>
+                <span class="hint">This self-check helps calibrate the model alongside your habits.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 5 — Review -->
+          <div class="step" data-step="5">
+            <div class="step-head">
+              <div class="icn"><svg viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"/></svg></div>
+              <div><h3>Review &amp; predict</h3><p>Confirm your details, then run the model.</p></div>
+            </div>
+            <div class="review-grid" id="reviewGrid"></div>
+
+            <div style="display:flex; justify-content:center; margin-top:34px;">
+              <button type="submit" class="btn-submit" id="submitBtn">
+                <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" stroke="#06131a" stroke-width="1.8" stroke-linejoin="round" fill="#06131a"/></svg>
+                Predict My Stress Level
+              </button>
+            </div>
+          </div>
+
+        </form>
+
+        <div class="wizard-nav" id="wizardNav">
+          <button type="button" class="btn-nav" id="backBtn">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M19 12H5M11 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Back
+          </button>
+          <button type="button" class="btn-nav" id="nextBtn">
+            Next
+            <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RESULT ============ -->
+<section class="result-section hidden" id="resultSection">
+  <div class="wrap">
+    <div class="result-card">
+      <div class="score-wrap">
+        <span class="score-num" id="scoreNum">—</span>
+        <span class="score-caption">predicted score</span>
+      </div>
+
+      <h3 class="result-title">Your Predicted Stress Score</h3>
+      <p class="result-explain" id="resultExplain">This is the raw numeric output returned by the prediction model, based on the lifestyle details you entered.</p>
+
+      <div class="result-metrics">
+        <div class="metric-chip">
+          <div class="icn"><svg viewBox="0 0 24 24" fill="none"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" stroke="currentColor" stroke-width="1.6"/></svg></div>
+          <b id="m-sleep">—</b><span>Sleep hrs</span>
+        </div>
+        <div class="metric-chip">
+          <div class="icn"><svg viewBox="0 0 24 24" fill="none"><path d="M6.5 6.5 17.5 17.5M4 9l3-3M20 15l-3 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+          <b id="m-activity">—</b><span>Activity hrs</span>
+        </div>
+        <div class="metric-chip">
+          <div class="icn"><svg viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.6"/></svg></div>
+          <b id="m-usage">—</b><span>Screen hrs</span>
+        </div>
+      </div>
+
+      <div class="result-actions">
+        <button class="btn-nav" id="restartBtn">Run another assessment</button>
+      </div>
+    </div>
+
+    <p class="disclaimer">MindSense AI provides an informational estimate based on self-reported lifestyle data. It is not a medical diagnosis. If you're struggling, please reach out to a mental health professional or a trusted person in your life.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">© 2026 MindSense AI · Built for demonstration purposes · Not a substitute for professional care</div>
+</footer>
+
+<!-- ============ LOADING OVERLAY ============ -->
+<div class="loading-overlay hidden" id="loadingOverlay">
+  <div class="loading-ring">
+    <svg viewBox="0 0 50 50"><circle cx="25" cy="25" r="20" fill="none" stroke="url(#loadGrad)" stroke-width="4" stroke-linecap="round" stroke-dasharray="90 60"/>
+      <defs><linearGradient id="loadGrad"><stop offset="0%" stop-color="#5eead4"/><stop offset="100%" stop-color="#818cf8"/></linearGradient></defs>
+    </svg>
+  </div>
+  <p id="loadingText">Analyzing your patterns…</p>
+</div>
+
+<script>
+(function(){
+  // ---------------------------------------------------------------
+  // Configuration
+  // ---------------------------------------------------------------
+  // Point this at your running FastAPI backend (the /predict endpoint).
+  const API_BASE = "http://127.0.0.1:8000";
+
+  const TOP_COUNTRIES = ['Other','Canada','USA','India','Australia','UK','Germany','France','Mexico','Turkey'];
+  const ALL_COUNTRIES = ["USA","India","UK","Canada","Australia","Germany","France","Mexico","Turkey",
+    "Brazil","Japan","China","South Korea","Spain","Italy","Netherlands","Sweden","Norway","Denmark",
+    "Indonesia","Pakistan","Bangladesh","Nigeria","South Africa","Egypt","Saudi Arabia","UAE","Russia",
+    "Poland","Philippines","Vietnam","Thailand","Malaysia","Singapore","New Zealand","Argentina","Chile",
+    "Colombia","Ireland","Portugal","Switzerland","Belgium","Austria","Greece","Israel","Kenya","Other"];
+
+  // ---------------------------------------------------------------
+  // Step navigation
+  // ---------------------------------------------------------------
+  const steps = Array.from(document.querySelectorAll('.step'));
+  const totalSteps = steps.length;
+  let current = 1;
+
+  const progressTrack = document.getElementById('progressTrack');
+  const stepLabels = ['Personal','Academic','Social','Lifestyle','Review'];
+  stepLabels.forEach((lbl,i)=>{
+    const div = document.createElement('div');
+    div.className = 'prog-step';
+    div.dataset.step = i+1;
+    div.innerHTML = `<div class="num">${i+1}</div><div class="lbl">${lbl}</div>`;
+    progressTrack.appendChild(div);
+  });
+
+  function renderProgress(){
+    document.querySelectorAll('.prog-step').forEach(el=>{
+      const n = parseInt(el.dataset.step);
+      el.classList.toggle('active', n === current);
+      el.classList.toggle('done', n < current);
+    });
+  }
+
+  function showStep(n){
+    steps.forEach(s => s.classList.toggle('active', parseInt(s.dataset.step) === n));
+    document.getElementById('backBtn').disabled = n === 1;
+    const nextBtn = document.getElementById('nextBtn');
+    const wizardNav = document.getElementById('wizardNav');
+    if(n === totalSteps){
+      wizardNav.classList.add('hidden');
+      buildReview();
+    } else {
+      wizardNav.classList.remove('hidden');
+    }
+    renderProgress();
+  }
+
+  function validateStep(n){
+    let ok = true;
+    const req = { 1:['age','gender','country'], 2:['academic'], 3:['platform','purpose'], 4:['stresslevel'] }[n] || [];
+    req.forEach(id=>{
+      const el = document.getElementById(id);
+      const field = el.closest('.field');
+      let valid = true;
+      if(id === 'age'){
+        const v = parseInt(el.value,10);
+        valid = !isNaN(v) && v>=10 && v<=100;
+      } else if(id === 'country'){
+        valid = el.value.trim().length > 0;
+      } else {
+        valid = el.value !== '';
+      }
+      field.classList.toggle('invalid', !valid);
+      if(!valid) ok = false;
+    });
+    return ok;
+  }
+
+  document.getElementById('nextBtn').addEventListener('click', ()=>{
+    if(!validateStep(current)) return;
+    if(current < totalSteps){ current++; showStep(current); }
+  });
+  document.getElementById('backBtn').addEventListener('click', ()=>{
+    if(current > 1){ current--; showStep(current); }
+  });
+
+  // ---------------------------------------------------------------
+  // Searchable country combo
+  // ---------------------------------------------------------------
+  const countryInput = document.getElementById('country');
+  const countryList = document.getElementById('countryList');
+
+  function renderCountryOptions(filter){
+    const f = filter.trim().toLowerCase();
+    const matches = ALL_COUNTRIES.filter(c => c.toLowerCase().includes(f));
+    countryList.innerHTML = '';
+    if(matches.length === 0){
+      countryList.innerHTML = '<div class="empty">No match — will be recorded as "Other"</div>';
+    } else {
+      matches.slice(0,12).forEach(c=>{
+        const d = document.createElement('div');
+        d.textContent = c;
+        d.addEventListener('mousedown', (e)=>{ e.preventDefault(); countryInput.value = c; countryList.classList.remove('open'); });
+        countryList.appendChild(d);
+      });
+    }
+  }
+  countryInput.addEventListener('focus', ()=>{ renderCountryOptions(countryInput.value); countryList.classList.add('open'); });
+  countryInput.addEventListener('input', ()=>{ renderCountryOptions(countryInput.value); countryList.classList.add('open'); });
+  countryInput.addEventListener('blur', ()=> setTimeout(()=>countryList.classList.remove('open'), 120));
+
+  // ---------------------------------------------------------------
+  // Sliders
+  // ---------------------------------------------------------------
+  const sliders = [
+    ['usage','val-usage'], ['unlocks','val-unlocks'], ['study','val-study'],
+    ['activity','val-activity'], ['sleep','val-sleep']
+  ];
+  sliders.forEach(([id,valId])=>{
+    const el = document.getElementById(id);
+    const out = document.getElementById(valId);
+    function update(){
+      out.textContent = el.value;
+      const pct = (el.value - el.min) / (el.max - el.min) * 100;
+      el.style.setProperty('--fill', pct + '%');
+    }
+    el.addEventListener('input', update);
+    update();
+  });
+
+  // ---------------------------------------------------------------
+  // Review step
+  // ---------------------------------------------------------------
+  function buildReview(){
+    const data = collectData();
+    const grid = document.getElementById('reviewGrid');
+    const rows = [
+      ['Age', data.Age], ['Gender', data.Gender], ['Country', data.Country],
+      ['Academic level', data.Academic_Level], ['Platform', data.Most_Used_Platform],
+      ['Purpose', data.Purpose_Of_Use], ['Screen usage', data.Avg_Daily_Usage_Hours + ' hrs'],
+      ['Daily unlocks', data.Daily_Unlocks], ['Study hours', data.Study_Hours + ' hrs'],
+      ['Physical activity', data.Physical_Activity_Hours + ' hrs'], ['Sleep', data.Sleep_Hours_Per_Night + ' hrs'],
+      ['Self-reported stress', data.Stress_Level]
+    ];
+    grid.innerHTML = rows.map(([k,v])=>`<div class="review-item"><span>${k}</span><span>${v}</span></div>`).join('');
+  }
+
+  function collectData(){
+    return {
+      Age: parseInt(document.getElementById('age').value, 10),
+      Gender: document.getElementById('gender').value,
+      Country: document.getElementById('country').value.trim() || 'Other',
+      Academic_Level: document.getElementById('academic').value,
+      Most_Used_Platform: document.getElementById('platform').value,
+      Purpose_Of_Use: document.getElementById('purpose').value,
+      Avg_Daily_Usage_Hours: parseInt(document.getElementById('usage').value, 10),
+      Daily_Unlocks: parseInt(document.getElementById('unlocks').value, 10),
+      Study_Hours: parseInt(document.getElementById('study').value, 10),
+      Physical_Activity_Hours: parseInt(document.getElementById('activity').value, 10),
+      Sleep_Hours_Per_Night: parseInt(document.getElementById('sleep').value, 10),
+      Stress_Level: document.getElementById('stresslevel').value
+    };
+  }
+
+  // ---------------------------------------------------------------
+  // Submit
+  // ---------------------------------------------------------------
+  const form = document.getElementById('stressForm');
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  const loadingText = document.getElementById('loadingText');
+  const loadingMsgs = ['Reading your lifestyle signals…','Weighing sleep against screen time…','Running the model…','Almost there…'];
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    if(!validateStep(1) || !validateStep(2) || !validateStep(3) || !validateStep(4)) return;
+
+    const payload = collectData();
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.disabled = true;
+    loadingOverlay.classList.remove('hidden');
+    let i = 0;
+    const msgInterval = setInterval(()=>{ i=(i+1)%loadingMsgs.length; loadingText.textContent = loadingMsgs[i]; }, 900);
+
+    try{
+      const res = await fetch(`${API_BASE}/predict`, {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify(payload)
+      });
+      if(!res.ok){
+        const errBody = await res.text();
+        throw new Error(`Server responded ${res.status}: ${errBody}`);
+      }
+      const json = await res.json();
+      renderResult(json.prediction, payload);
+    } catch(err){
+      alert('Could not reach the prediction service.\n\n' + err.message + '\n\nMake sure the FastAPI backend is running and reachable at ' + API_BASE + '.');
+    } finally {
+      clearInterval(msgInterval);
+      loadingOverlay.classList.add('hidden');
+      submitBtn.disabled = false;
+    }
+  });
+
+  // ---------------------------------------------------------------
+  // Result rendering — just the raw numeric prediction, no tiers/gauge
+  // ---------------------------------------------------------------
+  function renderResult(prediction, payload){
+    const scoreEl = document.getElementById('scoreNum');
+    const num = Number(prediction);
+    scoreEl.textContent = Number.isFinite(num) ? (Number.isInteger(num) ? num : num.toFixed(2)) : String(prediction);
+
+    document.getElementById('m-sleep').textContent = payload.Sleep_Hours_Per_Night;
+    document.getElementById('m-activity').textContent = payload.Physical_Activity_Hours;
+    document.getElementById('m-usage').textContent = payload.Avg_Daily_Usage_Hours;
+
+    document.getElementById('predict').classList.add('hidden');
+    document.getElementById('resultSection').classList.remove('hidden');
+    document.getElementById('resultSection').scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  document.getElementById('restartBtn').addEventListener('click', ()=>{
+    document.getElementById('resultSection').classList.add('hidden');
+    document.getElementById('predict').classList.remove('hidden');
+    current = 1;
+    showStep(current);
+    document.getElementById('predict').scrollIntoView({behavior:'smooth'});
+  });
+
+  showStep(current);
+})();
+</script>
+</body>
+</html>
