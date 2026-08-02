@@ -1,3 +1,3 @@
 import joblib
 
-model=joblib.load("../models/model.pkl")
+model=joblib.load("models/model.pkl")
