@@ -1,4 +1,4 @@
-from load_model import model
+from .load_model import model
 from fastapi import FastAPI
 from pydantic import BaseModel,Field
 from typing import Literal
